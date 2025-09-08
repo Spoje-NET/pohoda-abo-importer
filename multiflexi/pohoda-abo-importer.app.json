@@ -67,7 +67,7 @@
             "required": false
         },
         "EASE_LOGGER": {
-            "type": "string",
+            "type": "text",
             "description": "Logger configuration",
             "defval": "console|syslog",
             "required": false
@@ -80,5 +80,5 @@
             "schema": "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.report.schema.json"
         }
     },
-    "multiflexi": "1.28"
+    "multiflexi": "#VERSION#"
 }

@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	composer install --no-dev --optimize-autoloader --no-progress --no-suggest --prefer-dist
+
+override_dh_install:
+	dh_install
+	# Install multiflexi app JSONs and update version
+	if [ -d multiflexi ] && [ -f debian/multiflexi-pohoda-abo-importer.install ]; then \
+		mkdir -p debian/multiflexi-pohoda-abo-importer/usr/lib/pohoda-abo-importer/multiflexi; \
+		for file in multiflexi/*.app.json; do \
+			if [ -f "$$file" ]; then \
+				sed 's/\#VERSION\#/$(shell dpkg-parsechangelog --show-field Version)/g' "$$file" > "debian/multiflexi-pohoda-abo-importer/usr/lib/pohoda-abo-importer/multiflexi/$$(basename $$file)"; \
+			fi; \
+		done; \
+	fi
+
+override_dh_fixperms:
+	dh_fixperms
+	if [ -d debian/pohoda-abo-importer/usr/bin ]; then \
+		find debian/pohoda-abo-importer/usr/bin -type f -exec chmod 755 {} \; || true; \
+	fi

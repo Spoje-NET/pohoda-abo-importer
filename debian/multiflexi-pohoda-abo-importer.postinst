@@ -1,0 +1,12 @@
+#!/bin/sh
+# postinst script for pohoda-abo-importer
+set -e
+
+. /usr/share/debconf/confmodule
+
+for file in `ls /usr/lib/pohoda-abo-importer/multiflexi/*.json`
+do
+	multiflexi-json2app $file
+done
+
+#DEBHELPER#

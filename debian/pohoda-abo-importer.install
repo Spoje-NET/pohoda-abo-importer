@@ -1,0 +1,6 @@
+bin/* usr/bin/
+src/* usr/lib/pohoda-abo-importer/
+vendor/* usr/lib/pohoda-abo-importer/
+composer.json usr/lib/pohoda-abo-importer/
+.env usr/lib/pohoda-abo-importer/
+example.env usr/lib/pohoda-abo-importer/
