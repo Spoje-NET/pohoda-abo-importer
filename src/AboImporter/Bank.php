@@ -267,6 +267,133 @@ class Bank extends \mServer\Bank
     }
 
     /**
+     * Import multiple ABO files
+     *
+     * @param array $aboFilePaths Array of ABO file paths to import
+     * @return array Consolidated import results
+     */
+    public function importMultipleAboFiles(array $aboFilePaths): array
+    {
+        $logger = new \Ease\Logger\ToStd();
+        $overallStartTime = new \DateTime();
+        
+        $consolidatedResults = [
+            'status' => 'success',
+            'timestamp' => null,
+            'message' => '',
+            'artifacts' => [
+                'imported_transactions' => [],
+                'failed_transactions' => [],
+                'skipped_transactions' => [],
+                'processed_files' => [],
+                'failed_files' => [],
+            ],
+            'metrics' => [
+                'total_files' => count($aboFilePaths),
+                'processed_files' => 0,
+                'failed_files' => 0,
+                'total_transactions' => 0,
+                'imported_count' => 0,
+                'error_count' => 0,
+                'skipped_count' => 0,
+                'processing_time_seconds' => 0,
+            ],
+            'file_results' => [],
+        ];
+        
+        $logger->addToLog("Starting batch ABO import for " . count($aboFilePaths) . " files", 'info');
+        
+        foreach ($aboFilePaths as $filePath) {
+            $logger->addToLog("Processing file: " . basename($filePath), 'info');
+            
+            try {
+                $fileResult = $this->importAboFile($filePath);
+                $consolidatedResults['file_results'][] = $fileResult;
+                
+                // Aggregate metrics
+                $consolidatedResults['metrics']['total_transactions'] += $fileResult['metrics']['total_transactions'] ?? 0;
+                $consolidatedResults['metrics']['imported_count'] += $fileResult['metrics']['imported_count'] ?? 0;
+                $consolidatedResults['metrics']['error_count'] += $fileResult['metrics']['error_count'] ?? 0;
+                $consolidatedResults['metrics']['skipped_count'] += $fileResult['metrics']['skipped_count'] ?? 0;
+                
+                // Merge artifacts
+                $consolidatedResults['artifacts']['imported_transactions'] = array_merge(
+                    $consolidatedResults['artifacts']['imported_transactions'],
+                    $fileResult['artifacts']['imported_transactions'] ?? []
+                );
+                $consolidatedResults['artifacts']['failed_transactions'] = array_merge(
+                    $consolidatedResults['artifacts']['failed_transactions'],
+                    $fileResult['artifacts']['failed_transactions'] ?? []
+                );
+                $consolidatedResults['artifacts']['skipped_transactions'] = array_merge(
+                    $consolidatedResults['artifacts']['skipped_transactions'],
+                    $fileResult['artifacts']['skipped_transactions'] ?? []
+                );
+                
+                if ($fileResult['status'] === 'error') {
+                    $consolidatedResults['metrics']['failed_files']++;
+                    $consolidatedResults['artifacts']['failed_files'][] = [
+                        'file' => $filePath,
+                        'error' => $fileResult['message']
+                    ];
+                    $logger->addToLog("Failed to process file: " . basename($filePath) . " - " . $fileResult['message'], 'error');
+                } else {
+                    $consolidatedResults['metrics']['processed_files']++;
+                    $consolidatedResults['artifacts']['processed_files'][] = [
+                        'file' => $filePath,
+                        'transactions' => $fileResult['metrics']['imported_count'] ?? 0,
+                        'status' => $fileResult['status']
+                    ];
+                    $logger->addToLog("Successfully processed file: " . basename($filePath) . " (" . ($fileResult['metrics']['imported_count'] ?? 0) . " transactions)", 'success');
+                }
+                
+            } catch (\Exception $e) {
+                $consolidatedResults['metrics']['failed_files']++;
+                $consolidatedResults['artifacts']['failed_files'][] = [
+                    'file' => $filePath,
+                    'error' => $e->getMessage()
+                ];
+                $logger->addToLog("Exception processing file: " . basename($filePath) . " - " . $e->getMessage(), 'error');
+            }
+        }
+        
+        // Calculate overall processing time
+        $consolidatedResults['metrics']['processing_time_seconds'] = 
+            (new \DateTime())->getTimestamp() - $overallStartTime->getTimestamp();
+        
+        // Set overall status
+        if ($consolidatedResults['metrics']['failed_files'] === count($aboFilePaths)) {
+            $consolidatedResults['status'] = 'error';
+            $consolidatedResults['message'] = sprintf(
+                "Batch import failed: All %d files failed to process",
+                count($aboFilePaths)
+            );
+        } elseif ($consolidatedResults['metrics']['failed_files'] > 0) {
+            $consolidatedResults['status'] = 'warning';
+            $consolidatedResults['message'] = sprintf(
+                "Batch import completed with issues: %d/%d files processed successfully, %d transactions imported, %d errors, %d skipped",
+                $consolidatedResults['metrics']['processed_files'],
+                $consolidatedResults['metrics']['total_files'],
+                $consolidatedResults['metrics']['imported_count'],
+                $consolidatedResults['metrics']['error_count'],
+                $consolidatedResults['metrics']['skipped_count']
+            );
+        } else {
+            $consolidatedResults['message'] = sprintf(
+                "Batch import successful: %d files processed, %d transactions imported, %d skipped",
+                $consolidatedResults['metrics']['processed_files'],
+                $consolidatedResults['metrics']['imported_count'],
+                $consolidatedResults['metrics']['skipped_count']
+            );
+        }
+        
+        $consolidatedResults['timestamp'] = (new \DateTime())->format(\DateTime::ATOM);
+        $logger->addToLog($consolidatedResults['message'], $consolidatedResults['status'] === 'error' ? 'error' : 'info');
+        
+        return $consolidatedResults;
+    }
+
+    /**
      * Generate MultiFlexi compatible report
      *
      * @param array $results Import results
@@ -301,6 +428,19 @@ class Bank extends \mServer\Bank
             $report['artifacts']['skipped_transactions'] = array_map(function($tx) {
                 return "Skipped {$tx['document_number']}: {$tx['amount']} on {$tx['date']} - {$tx['reason']}";
             }, $results['artifacts']['skipped_transactions']);
+        }
+        
+        // Add batch-specific artifacts if they exist
+        if (!empty($results['artifacts']['processed_files'])) {
+            $report['artifacts']['processed_files'] = array_map(function($file) {
+                return "Processed {$file['file']}: {$file['transactions']} transactions ({$file['status']})";
+            }, $results['artifacts']['processed_files']);
+        }
+        
+        if (!empty($results['artifacts']['failed_files'])) {
+            $report['artifacts']['failed_files'] = array_map(function($file) {
+                return "Failed {$file['file']}: {$file['error']}";
+            }, $results['artifacts']['failed_files']);
         }
         
         $jsonOutput = json_encode($report, Shared::cfg('DEBUG') ? JSON_PRETTY_PRINT : 0);
