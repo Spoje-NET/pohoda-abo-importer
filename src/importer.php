@@ -122,7 +122,7 @@ if (empty($aboFilePaths)) {
 // Get output file for report
 $outputFile = array_key_exists('output', $options) 
     ? $options['output'] 
-    : (array_key_exists('o', $options) ? $options['o'] : \Ease\Shared::cfg('RESULT_FILE', ''));
+    : (array_key_exists('o', $options) ? $options['o'] : \Ease\Shared::cfg('RESULT_FILE', 'php://stdout'));
 
 // Create Bank instance and run the import
 $bank = new Bank();
@@ -132,11 +132,9 @@ if (count($aboFilePaths) === 1) {
     // Single file import
     $results = $bank->importAboFile($aboFilePaths[0]);
 } else {
-    // Multi-file batch import
-    $logger = new \Ease\Logger\ToStd();
-    $logger->addToLog("Found " . count($aboFilePaths) . " files to process", 'info');
+    $bank->addStatusMessage("Found " . count($aboFilePaths) . " files to process", 'info');
     foreach ($aboFilePaths as $i => $path) {
-        $logger->addToLog("File " . ($i + 1) . ": " . basename($path), 'info');
+        $bank->addStatusMessage("File " . ($i + 1) . ": " . basename($path), 'info');
     }
     $results = $bank->importMultipleAboFiles($aboFilePaths);
 }

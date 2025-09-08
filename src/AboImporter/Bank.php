@@ -74,9 +74,9 @@ class Bank extends \mServer\Bank
      */
     public function importAboFile(string $aboFilePath): array
     {
-        $logger = new \Ease\Logger\ToStd();
+
         $startTime = new \DateTime();
-        $logger->addToLog("Starting ABO import from: {$aboFilePath}", 'info');
+        $this->addStatusMessage("Starting ABO import from: {$aboFilePath}", 'info');
 
         $results = [
             'status' => 'success',
@@ -102,7 +102,7 @@ class Bank extends \mServer\Bank
             $results['status'] = 'error';
             $results['message'] = "ABO file not found: {$aboFilePath}";
             $results['timestamp'] = (new \DateTime())->format(\DateTime::ATOM);
-            $logger->addToLog($results['message'], 'error');
+            $this->addStatusMessage($results['message'], 'error');
             return $results;
         }
 
@@ -111,8 +111,8 @@ class Bank extends \mServer\Bank
             $parser = new \SpojeNet\AboParser\AboParser();
             $parsed = $parser->parseFile($aboFilePath);
             
-            $logger->addToLog("Parsed ABO file with format: {$parsed['format_version']}", 'info');
-            $logger->addToLog("Found " . count($parsed['statements']) . " statements and " . count($parsed['transactions']) . " transactions", 'info');
+            $this->addStatusMessage("Parsed ABO file with format: {$parsed['format_version']}", 'info');
+            $this->addStatusMessage("Found " . count($parsed['statements']) . " statements and " . count($parsed['transactions']) . " transactions", 'info');
 
             $importedCount = 0;
             $errorCount = 0;
@@ -136,7 +136,7 @@ class Bank extends \mServer\Bank
                             'date' => $transaction['valuation_date'] ?? $transaction['due_date'],
                             'reason' => 'Duplicate transaction already exists in Pohoda',
                         ];
-                        $logger->addToLog("Transaction already exists, skipping: {$transaction['document_number']}", 'info');
+                        $this->addStatusMessage("Transaction already exists, skipping: {$transaction['document_number']}", 'warning');
                         continue;
                     }
                     
@@ -146,20 +146,38 @@ class Bank extends \mServer\Bank
                     // Set basic transaction data
                     $this->setDataValue('bankType', $transaction['amount'] > 0 ? 'receipt' : 'expense');
                     $this->setDataValue('datePayment', $transaction['valuation_date'] ?? $transaction['due_date'] ?? date('Y-m-d'));
+                    $this->setDataValue('dateStatement', $transaction['valuation_date'] ?? $transaction['due_date'] ?? date('Y-m-d'));
                     $this->setDataValue('text', $this->buildTransactionDescription($transaction));
-                    $this->setDataValue('intNote', 'Automatic Import: ' . Shared::appName() . ' ' . Shared::appVersion() . ' #' . $transactionId . '#');
+                    $this->setDataValue('note', ''); // External note field
+                    $this->setDataValue('intNote', sprintf('%s %s Job: %s Trans: #%s#', Shared::appName(), Shared::appVersion(), Shared::cfg('MULTIFLEXI_JOB_ID', Shared::cfg('JOB_ID', 'n/a')), $transactionId));
                     
-                    // Set amount
-                    if ($transaction['amount'] !== null) {
-                        $this->setDataValue('homeCurrency', ['priceNone' => abs($transaction['amount'])]);
-                    }
+                    // Set amount using homeCurrency structure (following Raiffeisen bank pattern)
+                    // Always use absolute value and let bankType determine direction
+                    $this->setDataValue('homeCurrency', [
+                        'priceNone' => abs($transaction['amount']),
+                    ]);
                     
-                    // Add partner account if we have counter account
+                    // Add partner account and identity if we have counter account (following Raiffeisen pattern)
                     if (!empty($transaction['counter_account'])) {
-                        $this->setDataValue('paymentAccount', [
+                        $paymentAccount = [
                             'accountNo' => $transaction['counter_account'],
-                            'bankCode' => '', // Bank code not available in ABO format
-                        ]);
+                        ];
+                        
+                        // Add bank code if available
+                        if (!empty($transaction['counter_bank_code'])) {
+                            $paymentAccount['bankCode'] = $transaction['counter_bank_code'];
+                        }
+                        
+                        $this->setDataValue('paymentAccount', $paymentAccount);
+                        
+                        // Add partner identity if we have additional info about the counter party
+                        if (!empty($transaction['additional_info'])) {
+                            $this->setDataValue('partnerIdentity', [
+                                'address' => [
+                                    'name' => $transaction['additional_info'],
+                                ],
+                            ]);
+                        }
                     }
 
                     // Add symbols if they exist
@@ -178,8 +196,8 @@ class Bank extends \mServer\Bank
                         $this->setDataValue('account', Shared::cfg('POHODA_BANK_IDS'));
                     }
                     
-                    // Add to Pohoda and commit
-                    if ($this->addToPohoda() && $this->commit()) {
+                    // Add to Pohoda and commit (following exact Raiffeisen pattern)
+                    if ($this->insertTransactionToPohoda() && $this->commit()) {
                         $importedCount++;
                         $results['artifacts']['imported_transactions'][] = [
                             'transaction_id' => $transactionId,
@@ -187,7 +205,7 @@ class Bank extends \mServer\Bank
                             'amount' => $transaction['amount'],
                             'date' => $transaction['valuation_date'] ?? $transaction['due_date'],
                         ];
-                        $logger->addToLog("Imported transaction: {$transaction['document_number']} (Amount: {$transaction['amount']})", 'success');
+                        $this->addStatusMessage("Imported transaction: {$transaction['document_number']} (Amount: {$transaction['amount']})", 'success');
                     } else {
                         $errorCount++;
                         $results['artifacts']['failed_transactions'][] = [
@@ -195,7 +213,7 @@ class Bank extends \mServer\Bank
                             'document_number' => $transaction['document_number'],
                             'error' => 'Failed to commit to Pohoda',
                         ];
-                        $logger->addToLog("Failed to import transaction: {$transaction['document_number']}", 'warning');
+                        $this->addStatusMessage("Failed to import transaction: {$transaction['document_number']}", 'warning');
                     }
                     
                 } catch (\Exception $e) {
@@ -205,7 +223,7 @@ class Bank extends \mServer\Bank
                         'document_number' => $transaction['document_number'] ?? 'unknown',
                         'error' => $e->getMessage(),
                     ];
-                    $logger->addToLog("Error importing transaction {$transaction['document_number']}: " . $e->getMessage(), 'error');
+                    $this->addStatusMessage("Error importing transaction {$transaction['document_number']}: " . $e->getMessage(), 'error');
                 }
             }
             
@@ -226,13 +244,13 @@ class Bank extends \mServer\Bank
                 $results['message'] = "Import successful: {$importedCount} imported, {$skippedCount} skipped";
             }
             
-            $logger->addToLog($results['message'], $results['status'] === 'error' ? 'error' : 'info');
+            $this->addStatusMessage($results['message'], $results['status'] === 'error' ? 'error' : 'info');
             
         } catch (\Exception $e) {
             $results['status'] = 'error';
             $results['message'] = "Fatal error during import: " . $e->getMessage();
             $results['metrics']['processing_time_seconds'] = (new \DateTime())->getTimestamp() - $startTime->getTimestamp();
-            $logger->addToLog($results['message'], 'error');
+            $this->addStatusMessage($results['message'], 'error');
         }
         
         // Set final timestamp
@@ -267,6 +285,26 @@ class Bank extends \mServer\Bank
     }
 
     /**
+     * Insert transaction to Pohoda (following Raiffeisen Bank pattern)
+     *
+     * @return bool Success status
+     */
+    protected function insertTransactionToPohoda(): bool
+    {
+        try {
+            $cache = $this->getData();
+            $this->reset();
+            $this->takeData($cache);
+            
+            $result = $this->addToPohoda();
+            return $result instanceof self;
+        } catch (\Exception $e) {
+            $this->addStatusMessage('Error inserting transaction to Pohoda: ' . $e->getMessage(), 'error');
+            return false;
+        }
+    }
+
+    /**
      * Import multiple ABO files
      *
      * @param array $aboFilePaths Array of ABO file paths to import
@@ -274,7 +312,7 @@ class Bank extends \mServer\Bank
      */
     public function importMultipleAboFiles(array $aboFilePaths): array
     {
-        $logger = new \Ease\Logger\ToStd();
+
         $overallStartTime = new \DateTime();
         
         $consolidatedResults = [
@@ -301,10 +339,10 @@ class Bank extends \mServer\Bank
             'file_results' => [],
         ];
         
-        $logger->addToLog("Starting batch ABO import for " . count($aboFilePaths) . " files", 'info');
+        $this->addStatusMessage("Starting batch ABO import for " . count($aboFilePaths) . " files", 'info');
         
         foreach ($aboFilePaths as $filePath) {
-            $logger->addToLog("Processing file: " . basename($filePath), 'info');
+            $this->addStatusMessage("Processing file: " . basename($filePath), 'info');
             
             try {
                 $fileResult = $this->importAboFile($filePath);
@@ -336,7 +374,7 @@ class Bank extends \mServer\Bank
                         'file' => $filePath,
                         'error' => $fileResult['message']
                     ];
-                    $logger->addToLog("Failed to process file: " . basename($filePath) . " - " . $fileResult['message'], 'error');
+                    $this->addStatusMessage("Failed to process file: " . basename($filePath) . " - " . $fileResult['message'], 'error');
                 } else {
                     $consolidatedResults['metrics']['processed_files']++;
                     $consolidatedResults['artifacts']['processed_files'][] = [
@@ -344,7 +382,7 @@ class Bank extends \mServer\Bank
                         'transactions' => $fileResult['metrics']['imported_count'] ?? 0,
                         'status' => $fileResult['status']
                     ];
-                    $logger->addToLog("Successfully processed file: " . basename($filePath) . " (" . ($fileResult['metrics']['imported_count'] ?? 0) . " transactions)", 'success');
+                    $this->addStatusMessage("Successfully processed file: " . basename($filePath) . " (" . ($fileResult['metrics']['imported_count'] ?? 0) . " transactions)", 'success');
                 }
                 
             } catch (\Exception $e) {
@@ -353,7 +391,7 @@ class Bank extends \mServer\Bank
                     'file' => $filePath,
                     'error' => $e->getMessage()
                 ];
-                $logger->addToLog("Exception processing file: " . basename($filePath) . " - " . $e->getMessage(), 'error');
+                $this->addStatusMessage("Exception processing file: " . basename($filePath) . " - " . $e->getMessage(), 'error');
             }
         }
         
@@ -388,7 +426,7 @@ class Bank extends \mServer\Bank
         }
         
         $consolidatedResults['timestamp'] = (new \DateTime())->format(\DateTime::ATOM);
-        $logger->addToLog($consolidatedResults['message'], $consolidatedResults['status'] === 'error' ? 'error' : 'info');
+        $this->addStatusMessage($consolidatedResults['message'], $consolidatedResults['status'] === 'error' ? 'error' : 'info');
         
         return $consolidatedResults;
     }

@@ -12,7 +12,7 @@ The project consists of:
 - **ABO Parser**: Uses `spojenet/abo-parser` to parse bank statement files
 - **Pohoda Connector**: Uses `vitexsoftware/pohoda-connector` to communicate with Pohoda via mServer
 - **Importer Script**: Main logic in `src/importer.php` that processes movements
-- **CLI Executables**: Bash scripts in `bin/` for command-line usage
+- **CLI Executables**: Bash scripts in `bin/` for command-line usage (used only by Debian package)
 
 ## Dependencies
 
@@ -63,7 +63,11 @@ The application processes ABO files and imports movements into Pohoda:
 
 1. Place ABO file as `vystup.abo` in project root
 2. Configure environment variables in `.env`
-3. Run the importer: `bin/pohoda-abo-importer`
+3. Run the importer:
+   - For development: `php src/importer.php [abo-file-path]`
+   - For installed package: `bin/pohoda-abo-importer [abo-file-path]`
+
+**Note**: The `bin/` scripts are configured for system installation paths and are used only by the Debian package.
 
 ## Code Standards
 
@@ -89,3 +93,7 @@ GitHub Actions workflow runs on push/PR to main branch:
 - Main importer logic processes each movement from ABO parser and creates BankMovement records
 - Error handling and logging should be implemented for production use
 - Tests should be placed in `tests/` directory (currently not present)
+- **Development execution**: Use `php src/importer.php` directly instead of `bin/` scripts
+- **Package deployment**: The `bin/` scripts are configured for `/usr/lib/pohoda-abo-importer/` system paths
+- **Currency handling**: Uses `homeCurrency` with `priceNone` field following Pohoda XML schema
+- **Import pattern**: Follows the same successful pattern as `pohoda-raiffeisenbank` for transaction processing
