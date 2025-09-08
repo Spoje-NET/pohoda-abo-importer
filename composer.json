@@ -1,0 +1,35 @@
+{
+    "name": "spojenet/pohoda-abo-importer",
+    "description": "Import ABO statements into Pohoda using mServer",
+    "type": "project",
+    "require": {
+        "spojenet/abo-parser": "dev-main",
+        "vitexsoftware/pohoda-connector": "dev-main",
+        "phpstan/phpstan": "2.1.x-dev"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "*",
+        "phpstan/phpstan": "*",
+        "friendsofphp/php-cs-fixer": "^3.86",
+        "ergebnis/composer-normalize": "^2.47",
+        "ergebnis/php-cs-fixer-config": "^6.53"
+    },
+    "config": {
+        "allow-plugins": {
+            "ergebnis/composer-normalize": true
+        }
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "\\SpojeNet\\Pohoda\\AboImporter\\": "src/AboImporter"
+        }
+    },
+    "authors": [
+        {
+            "name": "CyberVitexus",
+            "email": "info@vitexsoftware.cz"
+        }
+    ],
+    "minimum-stability": "dev"
+}
