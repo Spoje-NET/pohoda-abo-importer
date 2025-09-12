@@ -1,28 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * ABO Importer for Pohoda via mServer
+ * This file is part of the PohodaABOimporter package
  *
- * This script imports ABO bank statement files into Pohoda accounting software
- * using the mServer API. It parses ABO format files and creates bank movements.
+ * https://github.com/Spoje-NET/pohoda-abo-importer
  *
- * Usage: php src/importer.php [abo-file-path-or-pattern]
- *        php src/importer.php /path/to/file.abo
- *        php src/importer.php "/path/to/files/*.abo-standard"
- *        php src/importer.php "/path/to/files/file?.abo"
+ * (c) Spoje.Net IT s.r.o. <https://spojenet.cz>
  *
- * @author VitexSoftware
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
 // Initialize environment configuration
-\Ease\Shared::init(['POHODA_URL', 'POHODA_USERNAME', 'POHODA_PASSWORD', 'POHODA_ICO', 'POHODA_BANK_IDS' ], __DIR__ . '/../.env');
+\Ease\Shared::init(['POHODA_URL', 'POHODA_USERNAME', 'POHODA_PASSWORD', 'POHODA_ICO', 'POHODA_BANK_IDS', 'POHODA_BANK_CODE'], __DIR__.'/../.env');
 
 use SpojeNet\Pohoda\AboImporter\Bank;
 
 /**
- * Display help information
+ * Display help information.
  */
 function showHelp(string $scriptName): void
 {
@@ -55,54 +54,58 @@ function showHelp(string $scriptName): void
 $options = getopt('o::e::h', ['output::', 'environment::', 'help']);
 
 // Check for help option
-if (array_key_exists('help', $options) || array_key_exists('h', $options)) {
+if (\array_key_exists('help', $options) || \array_key_exists('h', $options)) {
     showHelp($argv[0]);
+
     exit(0);
 }
 
 // Initialize environment
-$envFile = array_key_exists('environment', $options) 
-    ? $options['environment'] 
-    : (array_key_exists('e', $options) ? $options['e'] : '.env');
+$envFile = \array_key_exists('environment', $options)
+    ? $options['environment']
+    : (\array_key_exists('e', $options) ? $options['e'] : '.env');
 
 /**
- * Resolve file paths from patterns and arguments
+ * Resolve file paths from patterns and arguments.
  *
  * @param array $argv Command line arguments
+ *
  * @return array Array of resolved file paths
  */
 function resolveFilePaths(array $argv): array
 {
     $filePaths = [];
-    
+
     // Skip script name and process all non-option arguments
-    for ($i = 1; $i < count($argv); $i++) {
+    for ($i = 1; $i < \count($argv); ++$i) {
         $arg = $argv[$i];
-        
+
         // Skip option arguments
         if (str_starts_with($arg, '-')) {
             // Skip next argument if this is an option that takes a value
-            if (in_array($arg, ['-o', '--output', '-e', '--environment'])) {
-                $i++; // Skip the value argument
+            if (\in_array($arg, ['-o', '--output', '-e', '--environment'], true)) {
+                ++$i; // Skip the value argument
             }
+
             continue;
         }
-        
+
         // Check if the argument contains glob patterns
-        if (strpos($arg, '*') !== false || strpos($arg, '?') !== false || strpos($arg, '[') !== false) {
+        if (str_contains($arg, '*') || str_contains($arg, '?') || str_contains($arg, '[')) {
             // Use glob to expand the pattern
             $matches = glob($arg);
+
             if ($matches) {
                 $filePaths = array_merge($filePaths, $matches);
             } else {
-                fwrite(STDERR, "Warning: Pattern '" . $arg . "' matched no files\n");
+                fwrite(\STDERR, "Warning: Pattern '".$arg."' matched no files\n");
             }
         } else {
             // Regular file path
             $filePaths[] = $arg;
         }
     }
-    
+
     return array_unique($filePaths);
 }
 
@@ -110,32 +113,35 @@ function resolveFilePaths(array $argv): array
 $aboFilePaths = resolveFilePaths($argv);
 
 if (empty($aboFilePaths)) {
-    fwrite(STDERR, "No input files provided or no files matched the pattern\n");
-    fwrite(STDERR, "Usage: php " . $argv[0] . " [file-path-or-pattern]\n");
-    fwrite(STDERR, "Examples:\n");
-    fwrite(STDERR, "  php " . $argv[0] . " file.abo\n");
-    fwrite(STDERR, "  php " . $argv[0] . " \"*.abo-standard\"\n");
-    fwrite(STDERR, "  php " . $argv[0] . " \"/path/to/files/*.abo\"\n");
+    fwrite(\STDERR, "No input files provided or no files matched the pattern\n");
+    fwrite(\STDERR, 'Usage: php '.$argv[0]." [file-path-or-pattern]\n");
+    fwrite(\STDERR, "Examples:\n");
+    fwrite(\STDERR, '  php '.$argv[0]." file.abo\n");
+    fwrite(\STDERR, '  php '.$argv[0]." \"*.abo-standard\"\n");
+    fwrite(\STDERR, '  php '.$argv[0]." \"/path/to/files/*.abo\"\n");
+
     exit(1);
 }
 
 // Get output file for report
-$outputFile = array_key_exists('output', $options) 
-    ? $options['output'] 
-    : (array_key_exists('o', $options) ? $options['o'] : \Ease\Shared::cfg('RESULT_FILE', 'php://stdout'));
+$outputFile = \array_key_exists('output', $options)
+    ? $options['output']
+    : (\array_key_exists('o', $options) ? $options['o'] : \Ease\Shared::cfg('RESULT_FILE', 'php://stdout'));
 
 // Create Bank instance and run the import
 $bank = new Bank();
 
 // Determine whether to use single file or multi-file import
-if (count($aboFilePaths) === 1) {
+if (\count($aboFilePaths) === 1) {
     // Single file import
     $results = $bank->importAboFile($aboFilePaths[0]);
 } else {
-    $bank->addStatusMessage("Found " . count($aboFilePaths) . " files to process", 'info');
+    $bank->addStatusMessage('Found '.\count($aboFilePaths).' files to process', 'info');
+
     foreach ($aboFilePaths as $i => $path) {
-        $bank->addStatusMessage("File " . ($i + 1) . ": " . basename($path), 'info');
+        $bank->addStatusMessage('File '.($i + 1).': '.basename($path), 'info');
     }
+
     $results = $bank->importMultipleAboFiles($aboFilePaths);
 }
 

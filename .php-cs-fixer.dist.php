@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /**
- * This file is part of the PohodaRaiffeisenbank package
+ * This file is part of the PohodaABOimporter package
  *
- * https://github.com/Spoje-NET/pohoda-raiffeisenbank
+ * https://github.com/Spoje-NET/pohoda-abo-importer
  *
  * (c) Spoje.Net IT s.r.o. <https://spojenet.cz>
  *
