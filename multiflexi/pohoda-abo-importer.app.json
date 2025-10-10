@@ -18,8 +18,6 @@
         "Statements"
     ],
     "homepage": "https://github.com/Spoje-NET/pohoda-abo-importer",
-    "image": "",
-    "ociimage": "",
     "executable": "pohoda-abo-importer",
     "environment": {
         "ABO_FILE": {
