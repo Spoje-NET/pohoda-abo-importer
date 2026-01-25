@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>io.github.spoje_net.pohoda_abo_importer</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>pohoda-abo-importer</name>
+  <summary>ABO bank statement importer for Pohoda accounting system</summary>
+  <description>
+    <p>
+      A PHP application that imports ABO (bank statement) files into Pohoda accounting software using mServer API. It parses ABO format bank statements and creates bank movements in Pohoda with duplicate detection and error handling. Features: * Parses ABO format bank statements using spojenet/abo-parser * Connects to Pohoda via mServer using vitexsoftware/pohoda-connector * Duplicate transaction detection and prevention * Comprehensive error handling and logging * JSON report generation with MultiFlexi schema compliance * Command-line interface with configurable options MultiFlexi application package for pohoda-abo-importer that enables integration with the MultiFlexi management system. Provides web-based configuration and monitoring capabilities for the ABO bank statement import process.
+    </p>
+  </description>
+  <categories>
+    <category>System</category>
+    <category>ConsoleOnly</category>
+  </categories>
+  <url type="homepage">https://github.com/Spoje-NET/pohoda-abo-importer</url>
+  <url type="bugtracker">https://github.com/Spoje-NET/pohoda-abo-importer/issues</url>
+  <developer id="io.github.spoje_net">
+    <name>Spoje.Net</name>
+  </developer>
+  <provides>
+    <binary>pohoda-abo-importer</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+</component>
