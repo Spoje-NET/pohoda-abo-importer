@@ -1,134 +1,97 @@
 {
-    "$schema": "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.app.schema.json",
-    "schemaVersion": "3.0.0",
-    "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "name": {
-        "en": "Pohoda ABO Importer",
-        "cs": "Pohoda ABO Importer"
+  "$schema": "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.app.schema.json",
+  "schemaVersion": "3.0.0",
+  "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "name": {
+    "en": "Pohoda ABO Importer",
+    "cs": "Pohoda ABO Importer"
+  },
+  "description": {
+    "en": "Import ABO bank statement files into Pohoda using mServer",
+    "cs": "Import ABO bank statement files into Pohoda using mServer"
+  },
+  "tags": [
+    "Bank",
+    "ABO",
+    "Import",
+    "Pohoda",
+    "Statements"
+  ],
+  "homepage": "https://github.com/Spoje-NET/pohoda-abo-importer",
+  "executable": "pohoda-abo-importer",
+  "environment": {
+    "ABO_FILE": {
+      "type": "text",
+      "description": {
+        "en": "Path to ABO file to import",
+        "cs": "Path to ABO file to import"
+      },
+      "defval": "vystup.abo",
+      "required": true,
+      "category": "Other"
     },
-    "description": {
-        "en": "Import ABO bank statement files into Pohoda using mServer",
-        "cs": "Import ABO bank statement files into Pohoda using mServer"
+    "POHODA_TIMEOUT": {
+      "type": "number",
+      "description": {
+        "en": "Connection timeout in seconds",
+        "cs": "Connection timeout in seconds"
+      },
+      "defval": 60,
+      "required": true,
+      "category": "API"
     },
-    "tags": [
-        "Bank",
-        "ABO",
-        "Import",
-        "Pohoda",
-        "Statements"
-    ],
-    "homepage": "https://github.com/Spoje-NET/pohoda-abo-importer",
-    "executable": "pohoda-abo-importer",
-    "environment": {
-        "ABO_FILE": {
-            "type": "text",
-            "description": {
-                "en": "Path to ABO file to import",
-                "cs": "Path to ABO file to import"
-            },
-            "defval": "vystup.abo",
-            "required": true,
-            "category": "Other"
-        },
-        "POHODA_ICO": {
-            "type": "text",
-            "description": {
-                "en": "Pohoda Company ICO",
-                "cs": "Pohoda Company ICO"
-            },
-            "defval": "12345678",
-            "required": true,
-            "category": "API"
-        },
-        "POHODA_URL": {
-            "type": "text",
-            "description": {
-                "en": "Pohoda mServer URL",
-                "cs": "Pohoda mServer URL"
-            },
-            "defval": "http://127.0.0.1:50000",
-            "required": true,
-            "category": "API"
-        },
-        "POHODA_USERNAME": {
-            "type": "text",
-            "description": {
-                "en": "Pohoda Username",
-                "cs": "Pohoda Username"
-            },
-            "defval": "api",
-            "required": true,
-            "category": "API"
-        },
-        "POHODA_PASSWORD": {
-            "type": "password",
-            "description": {
-                "en": "Pohoda Password",
-                "cs": "Pohoda Password"
-            },
-            "defval": "api",
-            "required": true,
-            "category": "API"
-        },
-        "POHODA_TIMEOUT": {
-            "type": "number",
-            "description": {
-                "en": "Connection timeout in seconds",
-                "cs": "Connection timeout in seconds"
-            },
-            "defval": 60,
-            "required": true,
-            "category": "API"
-        },
-        "POHODA_DEBUG": {
-            "type": "bool",
-            "description": {
-                "en": "Enable debug mode",
-                "cs": "Enable debug mode"
-            },
-            "defval": false,
-            "required": false,
-            "category": "API"
-        },
-        "POHODA_BANK_IDS": {
-            "type": "text",
-            "description": {
-                "en": "Bank account identifier in Pohoda",
-                "cs": "Bank account identifier in Pohoda"
-            },
-            "defval": "",
-            "required": false,
-            "category": "API"
-        },
-        "RESULT_FILE": {
-            "type": "text",
-            "description": {
-                "en": "Path to save import report JSON",
-                "cs": "Path to save import report JSON"
-            },
-            "defval": "",
-            "required": false,
-            "category": "Other"
-        },
-        "EASE_LOGGER": {
-            "type": "text",
-            "description": {
-                "en": "Logger configuration",
-                "cs": "Logger configuration"
-            },
-            "defval": "console|syslog",
-            "required": false,
-            "category": "Behavior"
-        }
+    "POHODA_DEBUG": {
+      "type": "bool",
+      "description": {
+        "en": "Enable debug mode",
+        "cs": "Enable debug mode"
+      },
+      "defval": false,
+      "required": false,
+      "category": "API"
     },
-    "produces": {
-        "report": {
-            "type": "json",
-            "description": {
-                "en": "Import results and statistics including imported, failed, and skipped transactions",
-                "cs": "Import results and statistics including imported, failed, and skipped transactions"
-            },
-            "schema": "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.report.schema.json"
-        }
+    "POHODA_BANK_IDS": {
+      "type": "text",
+      "description": {
+        "en": "Bank account identifier in Pohoda",
+        "cs": "Bank account identifier in Pohoda"
+      },
+      "defval": "",
+      "required": false,
+      "category": "API"
+    },
+    "RESULT_FILE": {
+      "type": "text",
+      "description": {
+        "en": "Path to save import report JSON",
+        "cs": "Path to save import report JSON"
+      },
+      "defval": "",
+      "required": false,
+      "category": "Other"
+    },
+    "EASE_LOGGER": {
+      "type": "text",
+      "description": {
+        "en": "Logger configuration",
+        "cs": "Logger configuration"
+      },
+      "defval": "console|syslog",
+      "required": false,
+      "category": "Behavior"
     }
+  },
+  "produces": {
+    "report": {
+      "type": "json",
+      "description": {
+        "en": "Import results and statistics including imported, failed, and skipped transactions",
+        "cs": "Import results and statistics including imported, failed, and skipped transactions"
+      },
+      "schema": "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.report.schema.json"
+    }
+  },
+  "requirements": [
+    "mserver"
+  ]
 }
