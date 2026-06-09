@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.app.schema.json",
-  "schemaVersion": "3.0.0",
+  "schemaVersion": "3.4.0",
   "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "name": {
     "en": "Pohoda ABO Importer",
@@ -19,6 +19,21 @@
   ],
   "homepage": "https://github.com/Spoje-NET/pohoda-abo-importer",
   "executable": "pohoda-abo-importer",
+  "events": {
+    "consumes": {
+      "bank.statement.downloaded": {
+        "description": "A bank statement file was downloaded",
+        "format": "file"
+      }
+    },
+    "emits": {
+      "bank.statement.imported": {
+        "description": "A bank statement was imported into the accounting system",
+        "evidence": "banka",
+        "operation": "create"
+      }
+    }
+  },
   "environment": {
     "ABO_FILE": {
       "type": "text",
