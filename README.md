@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PHP Version](https://img.shields.io/badge/PHP-8.4%2B-blue.svg)](https://php.net)
 [![MultiFlexi Compatible](https://img.shields.io/badge/MultiFlexi-Compatible-green.svg)](https://github.com/VitexSoftware/MultiFlexi)
+![Packaging: deb](https://img.shields.io/badge/packaging-.deb-red?logo=debian&logoColor=white)
 
 A robust PHP application for importing ABO (Czech bank statement format) files into Pohoda accounting software using the mServer API. Features comprehensive error handling, duplicate detection, and MultiFlexi-compatible reporting.
 
