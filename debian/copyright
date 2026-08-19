@@ -32,7 +32,7 @@ Files:     .env
            .gitignore
            Makefile
            README.md
-           WARP.md
+           AGENTS.md
            bin/pohoda-abo-importer
            bin/pohoda-abo-importer-setup
            composer.json
@@ -244,7 +244,7 @@ Files:     .env
            vendor/spojenet/abo-parser/.gitignore
            vendor/spojenet/abo-parser/Makefile
            vendor/spojenet/abo-parser/README.md
-           vendor/spojenet/abo-parser/WARP.md
+           vendor/spojenet/abo-parser/AGENTS.md
            vendor/spojenet/abo-parser/composer.json
            vendor/spojenet/abo-parser/debian/Jenkinsfile
            vendor/spojenet/abo-parser/debian/Jenkinsfile.release
