@@ -1,0 +1,15 @@
+Package: multiflexi-pohoda-abo-importer
+Source: pohoda-abo-importer
+Version: 1.0.1
+Architecture: all
+Maintainer: Vitex <info@vitexsoftware.cz>
+Installed-Size: 450
+Depends: pohoda-abo-importer (= 1.0.1), multiflexi-cli, multiflexi-mserver
+Section: web
+Priority: optional
+Homepage: https://github.com/spojenet/pohoda-abo-importer
+Description: MultiFlexi integration for pohoda-abo-importer
+ MultiFlexi application package for pohoda-abo-importer that enables
+ integration with the MultiFlexi management system. Provides web-based
+ configuration and monitoring capabilities for the ABO bank statement
+ import process.

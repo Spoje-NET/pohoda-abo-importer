@@ -2,26 +2,41 @@
 
 export DH_VERBOSE = 1
 
+PKG_VERSION := $(shell dpkg-parsechangelog --show-field Version | sed 's/~.*//')
+PKG_SOURCE  := $(shell jq -r '.name' composer.json)
+PKG_TYPE    := $(shell jq -r '.type' composer.json)
+APPDIR      := debian/pohoda-abo-importer/usr/lib/pohoda-abo-importer
+
 %:
 	dh $@
 
 override_dh_auto_build:
-	composer install --no-dev --optimize-autoloader --no-progress --no-suggest --prefer-dist
+	# Pure PHP application, static debian/autoload.php is used instead of composer
+
+override_dh_auto_test:
+	# Tests need dev dependencies and a running mServer
 
 override_dh_install:
 	dh_install
-	# Install multiflexi app JSONs and update version
-	if [ -d multiflexi ] && [ -f debian/multiflexi-pohoda-abo-importer.install ]; then \
+	# Static Debian autoloader (no composer at build or runtime)
+	install -m 644 debian/autoload.php $(APPDIR)/autoload.php
+	sed -i "s|'unknown'|'$(PKG_SOURCE)'|" $(APPDIR)/autoload.php
+	sed -i "s|'0.0.0'|'$(PKG_VERSION)'|" $(APPDIR)/autoload.php
+	sed -i "s|'library'|'$(PKG_TYPE)'|g" $(APPDIR)/autoload.php
+	sed -i "3a defined('APP_NAME') || define('APP_NAME', '$(PKG_SOURCE)');" $(APPDIR)/autoload.php
+	sed -i "4a defined('APP_VERSION') || define('APP_VERSION', '$(PKG_VERSION)');" $(APPDIR)/autoload.php
+	# Entry points use the shipped autoloader, configuration comes from the environment
+	sed -i -e "s|__DIR__.'/../vendor/autoload.php'|__DIR__.'/autoload.php'|" $(APPDIR)/*.php
+	sed -i -e "s|__DIR__.'/../.env'|''|" $(APPDIR)/*.php
+	# MultiFlexi app definitions with the package version
+	if [ -d multiflexi ]; then \
 		mkdir -p debian/multiflexi-pohoda-abo-importer/usr/lib/pohoda-abo-importer/multiflexi; \
 		for file in multiflexi/*.app.json; do \
-			if [ -f "$$file" ]; then \
-				sed 's/\#VERSION\#/$(shell dpkg-parsechangelog --show-field Version)/g' "$$file" > "debian/multiflexi-pohoda-abo-importer/usr/lib/pohoda-abo-importer/multiflexi/$$(basename $$file)"; \
-			fi; \
+			[ -f "$$file" ] || continue; \
+			jq '.version = "$(PKG_VERSION)"' "$$file" > "debian/multiflexi-pohoda-abo-importer/usr/lib/pohoda-abo-importer/multiflexi/$$(basename $$file)"; \
 		done; \
 	fi
 
 override_dh_fixperms:
 	dh_fixperms
-	if [ -d debian/pohoda-abo-importer/usr/bin ]; then \
-		find debian/pohoda-abo-importer/usr/bin -type f -exec chmod 755 {} \; || true; \
-	fi
+	find debian/pohoda-abo-importer/usr/bin -type f -exec chmod 755 {} \; || true

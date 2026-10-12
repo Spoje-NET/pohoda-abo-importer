@@ -1,2 +1,2 @@
 #!/bin/bash
-php -f /usr/lib/pohoda-abo-importer/src/importer.php -- $@
+php -f /usr/lib/pohoda-abo-importer/importer.php -- $@

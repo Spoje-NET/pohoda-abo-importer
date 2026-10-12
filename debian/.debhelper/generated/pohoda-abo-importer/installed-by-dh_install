@@ -1,0 +1,6 @@
+./bin/pohoda-abo-importer
+./bin/pohoda-abo-importer-setup
+./src/AboImporter
+./src/importer.php
+./src/setup.php
+./example.env

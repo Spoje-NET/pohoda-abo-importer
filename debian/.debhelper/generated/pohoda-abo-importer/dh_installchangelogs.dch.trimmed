@@ -1,0 +1,19 @@
+pohoda-abo-importer (1.0.1) unstable; urgency=medium
+
+  * Static Debian autoloader, composer is no longer needed at build or runtime
+  * Depends on php-spojenet-abo-parser and php-vitexsoftware-pohoda-connector
+  * Fixed bin/pohoda-abo-importer path and package contents (no vendor/.env)
+  * multiflexi package imports the app definition with multiflexi-cli
+
+ -- Vítězslav Vitex Dvořák <info@vitexsoftware.cz>  Mon, 12 Oct 2026 16:23:08 +0200
+
+pohoda-abo-importer (1.0.0) jammy; urgency=medium
+
+  * Initial release
+  * ABO bank statement parser implementation 
+  * Pohoda mServer integration with duplicate detection
+  * JSON report generation with MultiFlexi schema compliance
+  * Command-line interface with configurable options
+  * Comprehensive error handling and logging
+
+ -- Vitex <info@vitexsoftware.cz>  Mon, 01 Jan 2025 10:00:00 +0100

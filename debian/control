@@ -1,5 +1,5 @@
 Source: pohoda-abo-importer
-Build-Depends: debhelper (>= 9), php-cli, composer, phpunit, php-xml, pkg-php-tools
+Build-Depends: debhelper-compat (= 13), jq, pkg-php-tools
 Standards-Version: 4.1.2
 Maintainer: Vitex <info@vitexsoftware.cz>
 Priority: optional
@@ -9,7 +9,7 @@ Vcs-Browser: https://github.com/spojenet/pohoda-abo-importer
 Vcs-Git: https://github.com/spojenet/pohoda-abo-importer.git
 
 Package: pohoda-abo-importer
-Depends: ${shlibs:Depends}, ${misc:Depends}, php-cli, php-curl, php-json, php-xml, php-mbstring, composer
+Depends: ${misc:Depends}, php-cli, php-curl, php-xml, php-mbstring, php-vitexsoftware-ease-core, php-vitexsoftware-pohoda-connector, php-spojenet-abo-parser
 Architecture: all
 Description: ABO bank statement importer for Pohoda accounting system
  A PHP application that imports ABO (bank statement) files into Pohoda 
@@ -25,7 +25,7 @@ Description: ABO bank statement importer for Pohoda accounting system
   * Command-line interface with configurable options
 
 Package: multiflexi-pohoda-abo-importer
-Depends: ${shlibs:Depends}, ${misc:Depends}, pohoda-abo-importer, multiflexi
+Depends: ${misc:Depends}, pohoda-abo-importer (= ${binary:Version}), multiflexi-cli, multiflexi-mserver
 Architecture: all
 Description: MultiFlexi integration for pohoda-abo-importer
  MultiFlexi application package for pohoda-abo-importer that enables
