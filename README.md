@@ -77,6 +77,7 @@ POHODA_DEBUG=false
 
 # Bank Account Mapping
 POHODA_BANK_IDS=KB
+POHODA_BANK_CODE=0100
 
 # Logging
 EASE_LOGGER=console|syslog

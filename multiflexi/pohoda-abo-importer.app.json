@@ -94,6 +94,15 @@
       "defval": "console|syslog",
       "required": false,
       "category": "Behavior"
+    },
+    "POHODA_BANK_CODE": {
+      "type": "string",
+      "description": {
+        "en": "Bank code of the account (e.g. 0800)",
+        "cs": "Kód banky účtu (např. 0800)"
+      },
+      "required": true,
+      "category": "Other"
     }
   },
   "produces": {
