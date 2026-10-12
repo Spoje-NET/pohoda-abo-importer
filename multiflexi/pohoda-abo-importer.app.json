@@ -46,7 +46,7 @@
       "category": "Other"
     },
     "POHODA_TIMEOUT": {
-      "type": "number",
+      "type": "integer",
       "description": {
         "en": "Connection timeout in seconds",
         "cs": "Connection timeout in seconds"
@@ -98,15 +98,16 @@
   },
   "produces": {
     "report": {
-      "type": "json",
       "description": {
         "en": "Import results and statistics including imported, failed, and skipped transactions",
         "cs": "Import results and statistics including imported, failed, and skipped transactions"
       },
-      "schema": "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.report.schema.json"
+      "schema": "https://raw.githubusercontent.com/VitexSoftware/php-vitexsoftware-multiflexi-core/refs/heads/main/multiflexi.report.schema.json",
+      "format": "json"
     }
   },
   "requirements": [
     "mserver"
-  ]
+  ],
+  "version": "1.0.1"
 }
