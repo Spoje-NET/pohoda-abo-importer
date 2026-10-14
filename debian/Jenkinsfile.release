@@ -1,6 +1,6 @@
 #!groovy
 
-String[] distributions = ['debian:bookworm', 'debian:trixie', 'ubuntu:jammy', 'ubuntu:noble', 'ubuntu:resolute']
+String[] distributions = ['debian:bookworm', 'debian:trixie', 'ubuntu:jammy', 'ubuntu:noble'] // ubuntu:resolute: php-spojenet-abo-parser is not published for resolute yet
 
 String vendor = 'vitexsoftware'
 String imagePrefix = 'multiflexi-'
